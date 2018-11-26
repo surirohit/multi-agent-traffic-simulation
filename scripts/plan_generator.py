@@ -23,9 +23,7 @@ import os
 import xml.etree.ElementTree as et
 import csv 
 import re 
-
-get_ipython().run_line_magic('matplotlib', 'inline')
-
+import argparse
 
 # ### Helper Functions
 
@@ -69,15 +67,32 @@ n_plans = 4 # No. of plans per agent
 interval = 5*60 # Number of seconds each iteration
 max_time_per_plan = 10*60 # Number of seconds to generate plans for
 
-nodes_file = '../config/SUMO/testNewGrid.nod.xml'
-edges_file = '../config/SUMO/testNewGrid.edg.xml'
-prefs_file = '../config/Agents/preferences.csv'
-trips_file = '../config/Agents/trips.csv'
-dataset_path = '../output/dataset/'
-last_pos_file = '../config/SUMO/netstate-outputNewGrid.xml'
+dataset_path = '../output/traffic/'
 completed_trips_file = '../output/complete.txt'
 
-current_time = 0*60
+parser=argparse.ArgumentParser()
+parser.add_argument('--netstate_output',help='the output file from last itaration - netstate-output.xml file')
+parser.add_argument('--trips',help='the trips file - trips.csv file')
+parser.add_argument('--preferences',help='the preferences file - preferences.csv file')
+parser.add_argument('--node',help='the node file - ***.nod.xml file')
+parser.add_argument('--edge',help='the edge file - ***.edg.xml file')
+parser.add_argument('--current_time',help='current time in seconds')
+
+args = parser.parse_args()
+
+nodes_file = args.node
+edges_file = args.edge
+prefs_file = args.preferences
+trips_file = args.trips
+last_pos_file = args.netstate_output
+current_time = int(args.current_time)
+
+# nodes_file = '../config/SUMO/testNewGrid.nod.xml'
+# edges_file = '../config/SUMO/testNewGrid.edg.xml'
+# prefs_file = '../config/Agents/preferences.csv'
+# trips_file = '../config/Agents/trips.csv'
+# last_pos_file = '../config/SUMO/netstate-outputNewGrid.xml'
+# current_time = 0*60
 
 
 # ### Core Functionality
@@ -252,7 +267,8 @@ def getAgentPositionsFromFile(path):
     
     for e in root.findall(".//*[@time='%.02f']/edge"%current_time):
         for v in e.findall(".//vehicle"):
-            agent_locs[v.get('id')] = re.search('e(.*)-', e.get('id')).group(1)
+            if e.get('id')[0]!=':': #when agent is at node
+                agent_locs[v.get('id')] = re.search('e(.*)-', e.get('id')).group(1)
     
     completed_trips = list(agent_set - agent_set_still_existing)
     
@@ -323,7 +339,7 @@ def getPlansForTrips(G, agent_trips, agent_prefs, n_links, completed_trips):
             this_score = 0
             this_time = agent_trip['time']
             
-            if agent_id not in completed_trips and agent_trip['time'] <= current_time + max_time_per_plan:
+            if agent_id not in completed_trips and agent_trip['time'] < current_time + max_time_per_plan:
                 # getting route based on minimizing parameter p_i
                 route = nx.dijkstra_path(G, 
                                          'n%d'%agent_trip['start'], 
@@ -470,5 +486,5 @@ writeCompletedTripsToFile(completed_trips + completed_trips_prev, completed_trip
 # In[22]:
 
 
-drawNetwork(G, show_edge_information=False)
+# drawNetwork(G, show_edge_information=False)
 

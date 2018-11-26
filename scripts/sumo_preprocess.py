@@ -64,8 +64,8 @@ with open(path_csv,"r") as csv_file:
 i=0
 for agent in agent_plans:
     
-    path_rel_agent_i="\\agent_"+str(i)+".plans"
-    path_agent_i=path_agents+path_rel_agent_i
+    path_rel_agent_i="agent_"+str(i)+".plans"
+    path_agent_i=os.path.join(path_agents,path_rel_agent_i)
 
     with open(path_agent_i) as plans_i_file:
         for j, line in enumerate(plans_i_file):
@@ -95,12 +95,12 @@ if not FIRST_IT:
     output_file=ET.parse(path_output)
     output_root=output_file.getroot()
 
-    vehicles=output_root.findall(".//*[@time="+stop_timestep+"]//vehicle")
+    vehicles=output_root.findall(".//*[@time=\""+stop_timestep+"\"]//vehicle")
 
-    for vechicle in vechisles:
-        agent_plans[vechicle.get("id")]['depart']=stop_timestep
-        agent_plans[vechicle.get("id")]['pos']=vechicle.get("pos")
-        agent_plans[vechicle.get("id")]['speed']=vechicle.get("speed")
+    for vehicle in vehicles:
+        agent_plans[vehicle.get("id")]['depart']=stop_timestep
+        agent_plans[vehicle.get("id")]['pos']=vehicle.get("pos")
+        agent_plans[vehicle.get("id")]['speed']=vehicle.get("speed")
 
 #import edge file
 
