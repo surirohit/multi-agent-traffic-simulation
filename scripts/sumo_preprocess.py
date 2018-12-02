@@ -61,19 +61,18 @@ with open(path_csv,"r") as csv_file:
 
 #import plans files
 
-i=0
 for agent in agent_plans:
     
-    path_rel_agent_i="agent_"+str(i)+".plans"
+    path_rel_agent_i=agent+".plans"
     path_agent_i=os.path.join(path_agents,path_rel_agent_i)
-
+    
     with open(path_agent_i) as plans_i_file:
         for j, line in enumerate(plans_i_file):
-            if j==plan_ids[i]:
+            if j==agent_plans[agent]['plan_id']:
+                # print agent, line
                 plan_10_list=list(map(int,line.split(":")[1].split(",")))
                 agent_plans[agent]['plan_10_list']=plan_10_list
                 break
-    i=i+1
 
 #import output file
 
@@ -150,14 +149,16 @@ for agent in agent_plans_nonzero:
     agent_plans_nonzero[agent]['route_str']=domino_ordering(list(compress(edges,agent_plans[agent]['plan_10_list'])))
     
 #export route file
+sorted_by_value = sorted(agent_plans_nonzero.items(), key=lambda kv: float(kv[1]['depart']))
+# print sorted_by_value
 
 with open(path_rou,"w") as rou_file:
 
     rou_file.write("<routes>\n")
     rou_file.write('<vType id="Car" accel="1.0" decel="5.0" length="2.0" maxSpeed="100.0" sigma="0.0"/>\n<vType id="Bus" accel="0.5" decel="3.0" length="12.0" maxSpeed="10.0" sigma="0.0"/>\n')
 
-    for agent in agent_plans_nonzero:
-        rou_file.write('<route id="r_'+agent+'" edges="'+agent_plans_nonzero[agent]['route_str']+'"/>\n')
-        rou_file.write('<vehicle id="'+agent+'" route="r_'+agent+'" pos="'+str(agent_plans_nonzero[agent]['pos'])+'" speed="'+str(agent_plans_nonzero[agent]['speed'])+'" depart="'+str(agent_plans_nonzero[agent]['depart'])+'" type="Car"/>\n')
+    for agent,agent_dict in sorted_by_value:
+        rou_file.write('<route id="r_'+agent+'" edges="'+agent_dict['route_str']+'"/>\n')
+        rou_file.write('<vehicle id="'+agent+'" route="r_'+agent+'" pos="'+str(agent_dict['pos'])+'" speed="'+str(agent_dict['speed'])+'" depart="'+str(agent_dict['depart'])+'" type="Car"/>\n')
 
     rou_file.write("</routes>")
