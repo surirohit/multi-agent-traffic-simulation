@@ -48,8 +48,12 @@ with open(path_csv,"r") as csv_file:
 
     reader=csv.reader(csv_file,delimiter=',')
 
+    for i in range(40):
+        next(reader)
+        
     for row in reader:
         last=row
+        break
 
     plan_ids=list(map(int,last[2:len(last)]))
 

@@ -82,6 +82,7 @@ parser.add_argument(
 parser.add_argument('--node', help='the node file - ***.nod.xml file')
 parser.add_argument('--edge', help='the edge file - ***.edg.xml file')
 parser.add_argument('--current_time', help='current time in seconds')
+parser.add_argument('--link_file', help='file containg link parameters')
 
 args = parser.parse_args()
 
@@ -91,6 +92,7 @@ prefs_file = args.preferences
 trips_file = args.trips
 last_pos_file = args.netstate_output
 current_time = int(args.current_time)
+link_file = args.link_file
 
 # nodes_file = '../config/SUMO/testNewGrid.nod.xml'
 # edges_file = '../config/SUMO/testNewGrid.edg.xml'
@@ -133,30 +135,49 @@ def getNetworkFromFile(path):
 # In[5]:
 
 
-def getNetworkWithLinkParameters(G, path):
+def getNetworkWithLinkParameters(G, path, link_file):
     '''
     Adds the link parameters (waiting time, travel time, etc to the road network)
     
     Parameters:
-        G       - input road network as a networkx graph
-        path    - path to input file containing network parameters
-        
+        G         - input road network as a networkx graph
+        path      - path to input file containing network parameters
+        link_file - file containing link parameters 
     Return values:
-        G       - road network with parameters added
-        n_links - number of links read
+        G         - road network with parameters added
+        n_links   - number of links read
     '''
 
     n_links = 0
     root = et.parse(path).getroot()
+    edges = {}
+    
     for child in root:
-        G.add_edge(child.attrib['from'], child.attrib['to'],
-                   link_id=child.attrib['id'],
-                   easy_link_id=n_links,
-                   p_1=np.random.normal(1, 0.2),
-                   p_2=np.random.normal(1, 0.2),
-                   p_3=np.random.normal(1, 0.2),
-                   p_4=np.random.normal(1, 0.2))
+        edges[child.attrib['id']] = {}
+        edges[child.attrib['id']]['from'] = child.attrib['from']
+        edges[child.attrib['id']]['to'] = child.attrib['to']
+        edges[child.attrib['id']]['easy_link_id'] = n_links
         n_links = n_links + 1
+    
+    with open(link_file, mode='r') as infile:
+        reader = csv.reader(infile)
+        next(reader)
+        
+        for row in reader:
+            edges[row[0]]['travel']=float(row[1])
+            edges[row[0]]['waiting']=float(row[2])
+            edges[row[0]]['fuel']=float(row[3])
+            edges[row[0]]['toll']=float(row[4])
+    
+    for edge in edges:
+        this_edge = edges[edge]
+        G.add_edge(this_edge['from'], this_edge['to'],
+                   link_id=edge,
+                   easy_link_id=this_edge['easy_link_id'],
+                   p_1=this_edge['travel'],
+                   p_2=this_edge['waiting'],
+                   p_3=this_edge['fuel'],
+                   p_4=this_edge['toll'])
 
     return G, n_links
 
@@ -464,7 +485,7 @@ print('Generating road network with', n_nodes, 'nodes')
 # In[14]:
 
 
-G, n_links = getNetworkWithLinkParameters(G, edges_file)
+G, n_links = getNetworkWithLinkParameters(G, edges_file, link_file)
 print('Added', n_links, 'links to the network')
 
 

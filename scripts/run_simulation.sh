@@ -1,6 +1,6 @@
 #!/bin/bash
 
-scenario="sample"
+scenario="case1"
 alpha="0.00"
 beta="1.00"
 
@@ -23,6 +23,7 @@ for i in `seq 0 300 6000`; do
         --preferences ../config/$scenario/preferences.csv \
         --node ../config/$scenario/$scenario.nod.xml \
         --edge ../config/$scenario/$scenario.edg.xml \
+        --link_file ../config/$scenario/link.csv \
         --current_time $i
     
     # Run IEPOS
