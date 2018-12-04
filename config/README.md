@@ -1,0 +1,4 @@
+- Case 1, clustered agents - same preferences
+- Case 2, clustered agents - different preferences
+- Case 3, random agents - same preferences
+- Case 4, random agents - different preferences
