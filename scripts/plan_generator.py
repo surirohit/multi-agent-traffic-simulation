@@ -227,7 +227,7 @@ def getTripsFromFile(path):
         reader = csv.reader(infile)
         num_vals = len(next(reader)) - 1
         agent_trips = {rows[0]: {'start': int(rows[1]), 'dest': int(
-            rows[2]), 'time': int(rows[3])} for rows in reader}
+            rows[2]), 'time': round(float(rows[3]))} for rows in reader}
 
     n_trips = len(agent_trips)
 
@@ -442,7 +442,9 @@ def writePlansToFiles(dataset_path, plans):
         with open(os.path.join(dataset_path, filename), 'w') as f:
             this_plans = []
             for i in range(1,n_plans+1):
-                cost = plans[agent]['score_'+str(i)]+10e-7*i
+                cost = plans[agent]['score_'+str(i)]
+                if cost!=0:
+                    cost += 10e-7*i
                 plan_str = ','.join(map(str, plans[agent]['plan_'+str(i)]))
                 this_plans.append([cost,plan_str])
             
