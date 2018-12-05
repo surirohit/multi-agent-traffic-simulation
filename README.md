@@ -6,10 +6,10 @@ The dataset also contains the desired starting time for every agent.
 ## Format of the datasets
 Every row is associated with an agent
 
--'Agent' column - the unique id of the corresponding agent
--'Start' column - the unique id of the starting node on the map for the corresponding agent
--'Dest' column - the unique id of the desired destination node on the map for the corresponding agent
--'Time' column - the starting time of the agent in seconds (the simulation starts at time 0)
+- 'Agent' column - the unique id of the corresponding agent
+- 'Start' column - the unique id of the starting node on the map for the corresponding agent
+- 'Dest' column - the unique id of the desired destination node on the map for the corresponding agent
+- 'Time' column - the starting time of the agent in seconds (the simulation starts at time 0)
 
 ### Case 1
 In this scenario agents are randomly generated over the map, with random destinations varying
