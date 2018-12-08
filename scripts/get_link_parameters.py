@@ -75,8 +75,8 @@ for edge in edges_info:
 edges_comb=edges_csv
 
 for edge in edges_sumo:
-    print(edges_comb[edge]['travel'])
-    print(edges_sumo[edge]['traveltime'])
+    #print(edges_comb[edge]['travel'])
+    #print(edges_sumo[edge]['traveltime'])
     edges_comb[edge]['travel']=edges_sumo[edge]['traveltime']
     edges_comb[edge]['waiting']=edges_sumo[edge]['waitingTime']
 

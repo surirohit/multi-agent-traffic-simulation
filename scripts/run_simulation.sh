@@ -54,10 +54,10 @@ for i in `seq 0 300 6000`; do
         --netstate-dump $outdir/t_$i/netstate-output.xml \
         -b $i \
         -e $((i+301)) \
-        --link-output $outdir/t_$i/link.xml
+        --additional-files ../config/additional.xml
 
     python get_link_parameters.py \
-	--sumo_output $outdir/t_$i/link.xml \
+	--sumo_output $outdir/../link.xml \
         --csv_in ../config/$scenario/link.csv \
 	--csv_out $outdir/t_$i/link.csv
 
