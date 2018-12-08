@@ -24,13 +24,11 @@ import xml.etree.ElementTree as et
 import csv
 import re
 import argparse
-from itertools import islice
+from kspath.deviation_path.mps import SingleTargetDeviationPathAlgorithm
 
 # ### Helper Functions
 
 # In[2]:
-def k_shortest_paths(G, source, target, k, weight=None):
-    return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
 
 
 def drawNetwork(G, show_edge_information=True):
@@ -70,7 +68,7 @@ def drawNetwork(G, show_edge_information=True):
 n_params = 4  # No. of link parameters
 n_plans = 16  # No. of plans per agent
 interval = 5*60  # Number of seconds each iteration
-max_time_per_plan = 10*60  # Number of seconds to generate plans for
+max_time_per_plan = 5*60  # Number of seconds to generate plans for
 
 dataset_path = '../output/traffic/'
 completed_trips_file = '../output/complete.txt'
@@ -85,6 +83,7 @@ parser.add_argument('--node', help='the node file - ***.nod.xml file')
 parser.add_argument('--edge', help='the edge file - ***.edg.xml file')
 parser.add_argument('--current_time', help='current time in seconds')
 parser.add_argument('--link_file', help='file containg link parameters')
+parser.add_argument('--first_file', help='file containg first link parameters')
 
 args = parser.parse_args()
 
@@ -95,6 +94,7 @@ trips_file = args.trips
 last_pos_file = args.netstate_output
 current_time = int(args.current_time)
 link_file = args.link_file
+first_file = args.first_file
 
 # nodes_file = '../config/SUMO/testNewGrid.nod.xml'
 # edges_file = '../config/SUMO/testNewGrid.edg.xml'
@@ -153,6 +153,10 @@ def getNetworkWithLinkParameters(G, path, link_file):
     n_links = 0
     root = et.parse(path).getroot()
     edges = {}
+
+    if current_time==0:
+        link_file = first_file
+        
     
     for child in root:
         edges[child.attrib['id']] = {}
@@ -371,13 +375,18 @@ def getPlansForTrips(G, agent_trips, agent_prefs, n_links, completed_trips):
         
         nx.set_edge_attributes(G, name='cost', values=this_costs)
 
+        dpa_mps = SingleTargetDeviationPathAlgorithm.create_from_graph(
+            G=G, target='n%d' % agent_trip['dest'], weight='cost')
+        
         paths = []
         
         # generate plans if agent is present in next iteration
         if agent_id not in completed_trips and agent_trip['time'] < current_time + max_time_per_plan:
             
-            for path in k_shortest_paths(G, 'n%d' % agent_trip['start'], 'n%d' % agent_trip['dest'], n_plans, 'cost'):
+            for path_count, path in enumerate(dpa_mps.shortest_simple_paths(source='n%d' % agent_trip['start']), 1):
                 paths.append(path)
+                if path_count == n_plans:
+                    break
         
             for i in range(len(paths)):
                 path = paths[i]
@@ -400,7 +409,7 @@ def getPlansForTrips(G, agent_trips, agent_prefs, n_links, completed_trips):
                         this_plan[ids[this_link]] = 1
                     
                         # adding time
-                        this_time += params['p_1'][this_link]*60
+                        this_time += params['p_1'][this_link]
                     
                         # adding link costs weighted with preferences to score
                         for k in range(n_params):
@@ -439,7 +448,7 @@ def writePlansToFiles(dataset_path, plans):
         with open(os.path.join(dataset_path, filename), 'w') as f:
             this_plans = []
             for i in range(1,n_plans+1):
-                cost = plans[agent]['score_'+str(i)]
+                cost = 1333*plans[agent]['score_'+str(i)]
                 if cost!=0:
                     cost += 10e-7*i
                 plan_str = ','.join(map(str, plans[agent]['plan_'+str(i)]))

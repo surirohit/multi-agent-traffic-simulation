@@ -1,8 +1,8 @@
 #!/bin/bash
 
-scenario="case1"
+scenario="case2"
 alpha="0.00"
-beta="1.00"
+beta="0.00"
 
 
 GREEN='\033[0;32m'
@@ -23,7 +23,8 @@ for i in `seq 0 300 6000`; do
         --preferences ../config/$scenario/preferences.csv \
         --node ../config/$scenario/$scenario.nod.xml \
         --edge ../config/$scenario/$scenario.edg.xml \
-        --link_file ../config/$scenario/link.csv \
+	--first_file ../config/$scenario/link.csv \
+	--link_file $outdir/t_$((i-300))/link.csv \
         --current_time $i
     
     # Run IEPOS
@@ -52,5 +53,13 @@ for i in `seq 0 300 6000`; do
         -r $outdir/t_$i/routes.rou.xml \
         --netstate-dump $outdir/t_$i/netstate-output.xml \
         -b $i \
-        -e $((i+301))
+        -e $((i+301)) \
+        --link-output $outdir/t_$i/link.xml
+
+    python get_link_parameters.py \
+	--sumo_output $outdir/t_$i/link.xml \
+        --csv_in ../config/$scenario/link.csv \
+	--csv_out $outdir/t_$i/link.csv
+
+    
 done
